@@ -1,0 +1,290 @@
+/* OctoSqueeze Admin Styles */
+
+.octosqueeze-stats-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+    max-width: 600px;
+}
+
+.octosqueeze-stats-card h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.octosqueeze-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.octosqueeze-stat {
+    text-align: center;
+    padding: 15px;
+    background: #f7f7f7;
+    border-radius: 4px;
+}
+
+.octosqueeze-stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #0073aa;
+}
+
+.octosqueeze-stat-label {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Media Library Column */
+.column-octosqueeze {
+    width: 100px;
+}
+
+.octosqueeze-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.octosqueeze-status.pending .button {
+    font-size: 11px;
+    height: 24px;
+    line-height: 22px;
+    padding: 0 8px;
+}
+
+.octosqueeze-status.compressed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.octosqueeze-status.processing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.octosqueeze-status.error {
+    background: #f8d7da;
+    color: #721c24;
+    cursor: help;
+}
+
+/* Compression button loading state */
+.octosqueeze-compress.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.octosqueeze-compress.loading::after {
+    content: '...';
+    animation: dots 1s steps(4, end) infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60% { content: '...'; }
+    80%, 100% { content: ''; }
+}
+
+/* Bulk Optimization Page */
+.octosqueeze-bulk-wrap {
+    max-width: 1200px;
+}
+
+.octosqueeze-bulk-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-card-highlight {
+    background: linear-gradient(135deg, #0073aa, #005a87);
+    border-color: #005a87;
+}
+
+.stat-card-highlight .stat-value,
+.stat-card-highlight .stat-label {
+    color: #fff;
+}
+
+.stat-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1d2327;
+}
+
+.stat-label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Progress Bar */
+.octosqueeze-progress-container {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.progress-bar {
+    height: 24px;
+    background: #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0073aa, #00a0d2);
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+.progress-details {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+/* Controls */
+.octosqueeze-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.octosqueeze-controls .button-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.octosqueeze-controls .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* Image List */
+.octosqueeze-image-list {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.octosqueeze-image-list h2 {
+    margin-top: 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.octosqueeze-image-list .column-thumbnail {
+    width: 60px;
+}
+
+.octosqueeze-image-list .column-thumbnail img {
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.octosqueeze-image-list .column-size {
+    width: 100px;
+}
+
+.octosqueeze-image-list .column-status {
+    width: 120px;
+}
+
+.octosqueeze-image-list .column-actions {
+    width: 120px;
+}
+
+.loading-row {
+    text-align: center;
+    padding: 30px !important;
+}
+
+.loading-row .spinner {
+    float: none;
+    margin: 0 10px 0 0;
+}
+
+.no-images {
+    text-align: center;
+    padding: 40px !important;
+    color: #0073aa;
+    font-size: 14px;
+}
+
+.status-compressed {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #d4edda;
+    color: #155724;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.status-pending {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #fff3cd;
+    color: #856404;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Pagination */
+#pagination {
+    margin-top: 15px;
+    text-align: center;
+}
+
+#pagination .button {
+    margin: 0 2px;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .octosqueeze-bulk-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .progress-details {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
