@@ -27,3 +27,4 @@ composer.lock
 # Build
 /build
 /dist
+.DS_Store

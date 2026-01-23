@@ -227,30 +227,37 @@ class OctoSqueeze_Bulk {
 
         global $wpdb;
 
-        // Total images
-        $total = $wpdb->get_var("
-            SELECT COUNT(*) FROM {$wpdb->posts}
-            WHERE post_type = 'attachment'
-            AND post_mime_type LIKE 'image/%'
-        ");
+        // Total images - use prepare() with LIKE pattern properly escaped
+        $mime_pattern = $wpdb->esc_like('image/') . '%';
+        $total = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts}
+            WHERE post_type = %s
+            AND post_mime_type LIKE %s",
+            'attachment',
+            $mime_pattern
+        ));
 
-        // Compressed images
-        $compressed = $wpdb->get_var("
-            SELECT COUNT(*) FROM {$wpdb->postmeta}
-            WHERE meta_key = '_octosqueeze'
-            AND meta_value LIKE '%\"status\":\"compressed\"%'
-        ");
+        // Compressed images - use prepare() with LIKE pattern properly escaped
+        $status_pattern = '%' . $wpdb->esc_like('"status":"compressed"') . '%';
+        $compressed = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->postmeta}
+            WHERE meta_key = %s
+            AND meta_value LIKE %s",
+            '_octosqueeze',
+            $status_pattern
+        ));
 
-        // Total savings
+        // Total savings - use prepare() for safe table reference
         $table_name = $wpdb->prefix . 'octosqueeze_compressions';
-        $savings = $wpdb->get_row("
-            SELECT
+        $savings = $wpdb->get_row($wpdb->prepare(
+            "SELECT
                 SUM(original_size) as total_original,
                 SUM(compressed_size) as total_compressed,
                 SUM(original_size - compressed_size) as total_saved
-            FROM $table_name
-            WHERE status = 'completed'
-        ");
+            FROM {$table_name}
+            WHERE status = %s",
+            'completed'
+        ));
 
         wp_send_json_success([
             'total_images' => (int) $total,
