@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 class OctoSqueeze_API {
 
     protected $api_key;
-    protected $endpoint = 'https://api.octosqueeze.com/v1';
+    protected $endpoint = 'https://app.octosqueeze.com/api/v1';
 
     public function __construct($api_key = null) {
         if ($api_key) {
@@ -34,14 +34,64 @@ class OctoSqueeze_API {
         }
 
         $settings = get_option('octosqueeze_settings', []);
+        $mode = $options['mode'] ?? $settings['mode'] ?? 'balanced';
+        $formats = json_encode($options['formats'] ?? $settings['formats'] ?? ['webp']);
 
-        $body = [
-            'file' => new CURLFile($file_path),
-            'mode' => $options['mode'] ?? $settings['mode'] ?? 'balanced',
-            'formats' => json_encode($options['formats'] ?? $settings['formats'] ?? ['webp']),
+        $boundary = wp_generate_password(24, false);
+        $body = '';
+
+        // File part
+        $body .= '--' . $boundary . "\r\n";
+        $body .= 'Content-Disposition: form-data; name="file"; filename="' . basename($file_path) . '"' . "\r\n";
+        $body .= 'Content-Type: ' . mime_content_type($file_path) . "\r\n\r\n";
+        $body .= file_get_contents($file_path) . "\r\n";
+
+        // Mode part
+        $body .= '--' . $boundary . "\r\n";
+        $body .= 'Content-Disposition: form-data; name="mode"' . "\r\n\r\n";
+        $body .= $mode . "\r\n";
+
+        // Formats part
+        $body .= '--' . $boundary . "\r\n";
+        $body .= 'Content-Disposition: form-data; name="formats"' . "\r\n\r\n";
+        $body .= $formats . "\r\n";
+
+        $body .= '--' . $boundary . '--' . "\r\n";
+
+        $url = $this->endpoint . '/compress';
+
+        $response = wp_remote_post($url, [
+            'timeout' => 60,
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->api_key,
+                'Accept' => 'application/json',
+                'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
+            ],
+            'body' => $body,
+        ]);
+
+        if (is_wp_error($response)) {
+            return [
+                'state' => false,
+                'error' => $response->get_error_message(),
+            ];
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        $result = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($status_code >= 400) {
+            return [
+                'state' => false,
+                'error' => $result['error']['message'] ?? 'Request failed',
+                'code' => $status_code,
+            ];
+        }
+
+        return [
+            'state' => true,
+            'data' => $result['data'] ?? $result,
         ];
-
-        return $this->request('POST', '/compress', $body, true);
     }
 
     /**
