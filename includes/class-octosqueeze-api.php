@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 class OctoSqueeze_API {
 
     protected $api_key;
-    protected $endpoint = 'https://app.octosqueeze.com/api/v1';
+    protected $endpoint = 'https://api.octosqueeze.com/api/v1';
 
     public function __construct($api_key = null) {
         if ($api_key) {
