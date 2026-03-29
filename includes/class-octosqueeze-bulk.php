@@ -55,7 +55,7 @@ class OctoSqueeze_Bulk {
                 ],
                 [
                     'key' => '_octosqueeze',
-                    'value' => '"status":"compressed"',
+                    'value' => '"status";s:10:"compressed"',
                     'compare' => 'NOT LIKE',
                 ],
             ],
@@ -95,7 +95,7 @@ class OctoSqueeze_Bulk {
                 ],
                 [
                     'key' => '_octosqueeze',
-                    'value' => '"status":"compressed"',
+                    'value' => '"status";s:10:"compressed"',
                     'compare' => 'NOT LIKE',
                 ],
             ],
@@ -237,8 +237,8 @@ class OctoSqueeze_Bulk {
             $mime_pattern
         ));
 
-        // Compressed images - use prepare() with LIKE pattern properly escaped
-        $status_pattern = '%' . $wpdb->esc_like('"status":"compressed"') . '%';
+        // Compressed images - match WordPress serialized format
+        $status_pattern = '%' . $wpdb->esc_like('s:10:"compressed"') . '%';
         $compressed = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->postmeta}
             WHERE meta_key = %s
@@ -450,6 +450,12 @@ class OctoSqueeze_Bulk {
                 });
             }
 
+            function escapeHtml(str) {
+                var div = document.createElement('div');
+                div.appendChild(document.createTextNode(str));
+                return div.innerHTML;
+            }
+
             function renderImageList(images) {
                 var $tbody = $('#image-list-body');
                 $tbody.empty();
@@ -470,9 +476,9 @@ class OctoSqueeze_Bulk {
 
                     $tbody.append(
                         '<tr data-id="' + img.id + '">' +
-                        '<td class="column-thumbnail"><img src="' + img.thumbnail + '" width="50" height="50"></td>' +
-                        '<td class="column-filename">' + img.filename + '</td>' +
-                        '<td class="column-size">' + img.size_formatted + '</td>' +
+                        '<td class="column-thumbnail"><img src="' + escapeHtml(img.thumbnail) + '" width="50" height="50"></td>' +
+                        '<td class="column-filename">' + escapeHtml(img.filename) + '</td>' +
+                        '<td class="column-size">' + escapeHtml(img.size_formatted) + '</td>' +
                         '<td class="column-status">' + statusHtml + '</td>' +
                         '<td class="column-actions">' + actionHtml + '</td>' +
                         '</tr>'
@@ -501,26 +507,45 @@ class OctoSqueeze_Bulk {
                 shouldStop = false;
                 totalSaved = 0;
                 processedCount = 0;
+                imageQueue = [];
 
                 $('#start-bulk').hide();
                 $('#stop-bulk').show();
                 $('.octosqueeze-progress-container').show();
+                $('#progress-status').text('<?php _e('Loading images...', 'octosqueeze'); ?>');
 
-                // Get all pending images
+                loadAllPages(1);
+            }
+
+            function loadAllPages(page) {
                 $.post(ajaxurl, {
                     action: 'octosqueeze_bulk_get_images',
                     nonce: '<?php echo wp_create_nonce('octosqueeze_bulk_nonce'); ?>',
-                    page: 1
+                    page: page
                 }, function(response) {
                     if (response.success && response.data.images.length > 0) {
-                        imageQueue = response.data.images.filter(function(img) {
+                        var pending = response.data.images.filter(function(img) {
                             return img.status !== 'compressed';
                         });
-                        totalToProcess = imageQueue.length;
-                        $('#progress-count').text('0 / ' + totalToProcess);
-                        processNextImage();
+                        imageQueue = imageQueue.concat(pending);
+
+                        if (page < response.data.pages) {
+                            loadAllPages(page + 1);
+                        } else {
+                            totalToProcess = imageQueue.length;
+                            $('#progress-count').text('0 / ' + totalToProcess);
+                            $('#progress-status').text('<?php _e('Compressing...', 'octosqueeze'); ?>');
+                            processNextImage();
+                        }
                     } else {
-                        finishBulk();
+                        if (imageQueue.length > 0) {
+                            totalToProcess = imageQueue.length;
+                            $('#progress-count').text('0 / ' + totalToProcess);
+                            $('#progress-status').text('<?php _e('Compressing...', 'octosqueeze'); ?>');
+                            processNextImage();
+                        } else {
+                            finishBulk();
+                        }
                     }
                 });
             }

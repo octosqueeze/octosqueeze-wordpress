@@ -144,7 +144,7 @@ class OctoSqueeze_Settings {
         $options = get_option('octosqueeze_settings', []);
         $value = $options['api_key'] ?? '';
         ?>
-        <input type="text" name="octosqueeze_settings[api_key]"
+        <input type="password" name="octosqueeze_settings[api_key]"
                value="<?php echo esc_attr($value); ?>"
                class="regular-text"
                placeholder="os_xxxxxxxxxxxx">

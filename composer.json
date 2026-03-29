@@ -1,0 +1,17 @@
+{
+    "name": "octosqueeze/octosqueeze-wordpress",
+    "description": "OctoSqueeze image compression plugin for WordPress",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OctoSqueeze\\WordPress\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}

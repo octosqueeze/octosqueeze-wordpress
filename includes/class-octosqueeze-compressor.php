@@ -16,19 +16,6 @@ class OctoSqueeze_Compressor {
     }
 
     /**
-     * Handle file upload
-     */
-    public function handle_upload($upload) {
-        if (!isset($upload['file']) || !$this->is_image($upload['file'])) {
-            return $upload;
-        }
-
-        // Mark for processing
-        // Actual compression happens in process_attachment
-        return $upload;
-    }
-
-    /**
      * Process attachment after upload
      */
     public function process_attachment($attachment_id) {

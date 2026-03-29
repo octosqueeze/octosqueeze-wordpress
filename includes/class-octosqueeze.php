@@ -38,7 +38,6 @@ class OctoSqueeze {
         $options = get_option('octosqueeze_settings', []);
 
         if (!empty($options['compress_on_upload']) && !empty($options['api_key'])) {
-            add_filter('wp_handle_upload', [$this->compressor, 'handle_upload']);
             add_action('add_attachment', [$this->compressor, 'process_attachment']);
         }
 

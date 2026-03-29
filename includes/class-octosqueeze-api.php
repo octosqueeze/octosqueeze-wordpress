@@ -27,6 +27,9 @@ class OctoSqueeze_API {
 
     /**
      * Compress image from file path
+     *
+     * Uses cURL directly with CURLFile to stream file uploads
+     * instead of loading the entire file into memory.
      */
     public function compress_file($file_path, $options = []) {
         if (!file_exists($file_path)) {
@@ -35,50 +38,43 @@ class OctoSqueeze_API {
 
         $settings = get_option('octosqueeze_settings', []);
         $mode = $options['mode'] ?? $settings['mode'] ?? 'balanced';
-        $formats = json_encode($options['formats'] ?? $settings['formats'] ?? ['webp']);
-
-        $boundary = wp_generate_password(24, false);
-        $body = '';
-
-        // File part
-        $body .= '--' . $boundary . "\r\n";
-        $body .= 'Content-Disposition: form-data; name="file"; filename="' . basename($file_path) . '"' . "\r\n";
-        $body .= 'Content-Type: ' . mime_content_type($file_path) . "\r\n\r\n";
-        $body .= file_get_contents($file_path) . "\r\n";
-
-        // Mode part
-        $body .= '--' . $boundary . "\r\n";
-        $body .= 'Content-Disposition: form-data; name="mode"' . "\r\n\r\n";
-        $body .= $mode . "\r\n";
-
-        // Formats part
-        $body .= '--' . $boundary . "\r\n";
-        $body .= 'Content-Disposition: form-data; name="formats"' . "\r\n\r\n";
-        $body .= $formats . "\r\n";
-
-        $body .= '--' . $boundary . '--' . "\r\n";
+        $formats = $options['formats'] ?? $settings['formats'] ?? ['webp'];
+        $format = is_array($formats) ? $formats[0] : $formats;
 
         $url = $this->endpoint . '/compress';
 
-        $response = wp_remote_post($url, [
-            'timeout' => 60,
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->api_key,
-                'Accept' => 'application/json',
-                'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
+        $postfields = [
+            'file' => new \CURLFile($file_path, mime_content_type($file_path), basename($file_path)),
+            'mode' => $mode,
+            'format' => $format,
+        ];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $postfields,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $this->api_key,
+                'Accept: application/json',
             ],
-            'body' => $body,
         ]);
 
-        if (is_wp_error($response)) {
+        $response_body = curl_exec($ch);
+        $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+
+        if ($response_body === false) {
             return [
                 'state' => false,
-                'error' => $response->get_error_message(),
+                'error' => $curl_error ?: 'cURL request failed',
             ];
         }
 
-        $status_code = wp_remote_retrieve_response_code($response);
-        $result = json_decode(wp_remote_retrieve_body($response), true);
+        $result = json_decode($response_body, true);
 
         if ($status_code >= 400) {
             return [
@@ -99,11 +95,12 @@ class OctoSqueeze_API {
      */
     public function compress_url($url, $options = []) {
         $settings = get_option('octosqueeze_settings', []);
+        $formats = $options['formats'] ?? $settings['formats'] ?? ['webp'];
 
         $body = [
             'url' => $url,
             'mode' => $options['mode'] ?? $settings['mode'] ?? 'balanced',
-            'formats' => $options['formats'] ?? $settings['formats'] ?? ['webp'],
+            'format' => is_array($formats) ? $formats[0] : $formats,
         ];
 
         return $this->request('POST', '/compress', $body);
@@ -114,12 +111,13 @@ class OctoSqueeze_API {
      */
     public function compress_batch($items, $options = []) {
         $settings = get_option('octosqueeze_settings', []);
+        $formats = $settings['formats'] ?? ['webp'];
 
         $body = [
             'items' => $items,
             'options' => array_merge([
                 'mode' => $settings['mode'] ?? 'balanced',
-                'formats' => $settings['formats'] ?? ['webp'],
+                'format' => is_array($formats) ? $formats[0] : $formats,
             ], $options),
         ];
 
@@ -138,7 +136,6 @@ class OctoSqueeze_API {
      */
     public function download($url) {
         $response = wp_remote_get($url, [
-            'headers' => $this->get_headers(),
             'timeout' => 60,
         ]);
 
